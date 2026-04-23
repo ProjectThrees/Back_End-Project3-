@@ -37,6 +37,10 @@ public class FavoriteService {
         this.listingRepository = listingRepository;
     }
 
+    public List<Favorite> getAllFavorites() {
+        return favoriteRepository.findAll();
+    }
+
     public List<Favorite> getFavoritesByUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("User not found with id: " + userId));
