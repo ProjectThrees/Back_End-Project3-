@@ -5,31 +5,30 @@ import com.studentmarketplace.backend.model.Favorite;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.User;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-@DataJpaTest
+@ExtendWith(MockitoExtension.class)
 class FavoriteRepositoryTest {
 
-    @Autowired
+    @Mock
     private FavoriteRepository favoriteRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ListingRepository listingRepository;
 
     @Test
     void existsFindAndDeleteByUserAndListingWork() {
-        User user = userRepository.save(TestDataFactory.user(UUID.randomUUID(), "favorite@example.com"));
-        Listing listing = listingRepository.save(TestDataFactory.listing(UUID.randomUUID(), user));
-        Favorite favorite = favoriteRepository.save(TestDataFactory.favorite(UUID.randomUUID(), user, listing));
+        User user = TestDataFactory.user(UUID.randomUUID(), "favorite@example.com");
+        Listing listing = TestDataFactory.listing(UUID.randomUUID(), user);
+        Favorite favorite = TestDataFactory.favorite(UUID.randomUUID(), user, listing);
+        when(favoriteRepository.existsByUserAndListing(user, listing)).thenReturn(true, false);
+        when(favoriteRepository.findByUser(user)).thenReturn(List.of(favorite));
 
         assertTrue(favoriteRepository.existsByUserAndListing(user, listing));
 
@@ -39,5 +38,8 @@ class FavoriteRepositoryTest {
 
         favoriteRepository.deleteByUserAndListing(user, listing);
         assertFalse(favoriteRepository.existsByUserAndListing(user, listing));
+
+        verify(favoriteRepository).findByUser(user);
+        verify(favoriteRepository).deleteByUserAndListing(user, listing);
     }
 }
