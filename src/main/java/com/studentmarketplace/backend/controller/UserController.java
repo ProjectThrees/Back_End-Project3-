@@ -1,11 +1,16 @@
 package com.studentmarketplace.backend.controller;
 
+import com.studentmarketplace.backend.dto.ApiMapper;
+import com.studentmarketplace.backend.dto.UserCreateRequestDto;
+import com.studentmarketplace.backend.dto.UserResponseDto;
+import com.studentmarketplace.backend.dto.UserUpdateRequestDto;
 import com.studentmarketplace.backend.service.UserService;
-import com.studentmarketplace.backend.model.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -19,14 +24,19 @@ public class UserController {
 
     // GET /users
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(){
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserResponseDto>> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllUsers().stream().map(ApiMapper::toUserResponse).toList());
     }
 
     // GET /users/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<User>> getUserById(@PathVariable UUID id){
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<Optional<UserResponseDto>> getUserById(@PathVariable UUID id){
+        return ResponseEntity.ok(userService.getUserById(id).map(ApiMapper::toUserResponse));
+    }
+
+    @PostMapping
+    public ResponseEntity<UserResponseDto> createUser(@RequestBody UserCreateRequestDto userRequest) {
+        return ResponseEntity.ok(ApiMapper.toUserResponse(userService.createUser(ApiMapper.toUser(userRequest))));
     }
 
     // GET /users/me (Implement this when we can get current user)
@@ -37,10 +47,10 @@ public class UserController {
     }
      */
 
-    // PUT /users/me
-    @PutMapping("/me")
-    public ResponseEntity<User> updateCurrentUser(@PathVariable UUID id,@RequestBody User user){
-        return ResponseEntity.ok(userService.updateUser(id, user));
+    // PUT /users/{id}
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable UUID id, @RequestBody UserUpdateRequestDto userRequest){
+        return ResponseEntity.ok(ApiMapper.toUserResponse(userService.updateUser(id, ApiMapper.toUser(userRequest))));
     }
 
 

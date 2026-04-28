@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.controller;
 
-import com.studentmarketplace.backend.model.Favorite;
+import com.studentmarketplace.backend.dto.ApiMapper;
+import com.studentmarketplace.backend.dto.FavoriteRequestDto;
+import com.studentmarketplace.backend.dto.FavoriteResponseDto;
 import com.studentmarketplace.backend.service.FavoriteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,20 +21,19 @@ public class FavoriteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Favorite>> getAllFavorites() {
-        return ResponseEntity.ok(favoriteService.getAllFavorites());
+    public ResponseEntity<List<FavoriteResponseDto>> getAllFavorites() {
+        return ResponseEntity.ok(favoriteService.getAllFavorites().stream().map(ApiMapper::toFavoriteResponse).toList());
     }
 
     @PostMapping("/{listingId}")
-    public ResponseEntity<Favorite> addToFavorite(@RequestBody UUID userId, @PathVariable UUID listingId) {
-        Favorite created = favoriteService.addFavorite(userId,listingId);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<FavoriteResponseDto> addToFavorite(@RequestBody FavoriteRequestDto favoriteRequest, @PathVariable UUID listingId) {
+        return ResponseEntity.ok(ApiMapper.toFavoriteResponse(favoriteService.addFavorite(favoriteRequest.userId(), listingId)));
 
     }
 
     @DeleteMapping("/{listingId}")
-    public ResponseEntity<Void> deleteFavorite(@RequestBody UUID userId, @PathVariable UUID listingId) {
-        favoriteService.removeFavorite(userId,listingId);
+    public ResponseEntity<Void> deleteFavorite(@RequestBody FavoriteRequestDto favoriteRequest, @PathVariable UUID listingId) {
+        favoriteService.removeFavorite(favoriteRequest.userId(), listingId);
         return ResponseEntity.noContent().build();
     }
 }

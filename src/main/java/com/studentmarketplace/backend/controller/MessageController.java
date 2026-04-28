@@ -1,11 +1,12 @@
 package com.studentmarketplace.backend.controller;
 
-import com.studentmarketplace.backend.model.Message;
+import com.studentmarketplace.backend.dto.ApiMapper;
+import com.studentmarketplace.backend.dto.MessageRequestDto;
+import com.studentmarketplace.backend.dto.MessageResponseDto;
 import com.studentmarketplace.backend.service.MessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,21 +22,20 @@ public class MessageController {
 
     //GET /messages
     @GetMapping
-    public ResponseEntity<List<Message>> getAllMessages(){
-        return ResponseEntity.ok(messageService.getAllMessages());
+    public ResponseEntity<List<MessageResponseDto>> getAllMessages(){
+        return ResponseEntity.ok(messageService.getAllMessages().stream().map(ApiMapper::toMessageResponse).toList());
     }
 
     //GET /messages/{messageId}
     @GetMapping("/{messageId}")
-    public ResponseEntity<Optional<Message>> getMessage(@PathVariable UUID messageId){
-        return ResponseEntity.ok(messageService.getMessageById(messageId));
+    public ResponseEntity<Optional<MessageResponseDto>> getMessage(@PathVariable UUID messageId){
+        return ResponseEntity.ok(messageService.getMessageById(messageId).map(ApiMapper::toMessageResponse));
     }
 
     //POST /messages
     @PostMapping
-    public ResponseEntity<Message> sendMessage(@RequestBody Message message){
-        Message created = messageService.sendMessage(message);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<MessageResponseDto> sendMessage(@RequestBody MessageRequestDto messageRequest){
+        return ResponseEntity.ok(ApiMapper.toMessageResponse(messageService.sendMessage(ApiMapper.toMessage(messageRequest))));
     }
 
     //DELETE /messages/{messageId}
