@@ -1,6 +1,9 @@
 package com.studentmarketplace.backend.controller;
 
-import com.studentmarketplace.backend.model.Report;
+import com.studentmarketplace.backend.dto.ApiMapper;
+import com.studentmarketplace.backend.dto.ReportRequestDto;
+import com.studentmarketplace.backend.dto.ReportResponseDto;
+import com.studentmarketplace.backend.dto.ReportStatusUpdateDto;
 import com.studentmarketplace.backend.service.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,27 +23,26 @@ public class ReportController {
 
     //GET /report
     @GetMapping
-    public ResponseEntity<List<Report>> getAllReports() {
-        return ResponseEntity.ok(reportService.getAllReports());
+    public ResponseEntity<List<ReportResponseDto>> getAllReports() {
+        return ResponseEntity.ok(reportService.getAllReports().stream().map(ApiMapper::toReportResponse).toList());
     }
 
     //GET /report/{reportId}
     @GetMapping("/{reportId}")
-    public ResponseEntity<Optional<Report>> getReportById(@PathVariable UUID reportId) {
-        return ResponseEntity.ok(reportService.getReportById(reportId));
+    public ResponseEntity<Optional<ReportResponseDto>> getReportById(@PathVariable UUID reportId) {
+        return ResponseEntity.ok(reportService.getReportById(reportId).map(ApiMapper::toReportResponse));
     }
 
     //POST /report
     @PostMapping
-    public ResponseEntity<Report> createReport(@RequestBody Report report) {
-        Report created = reportService.createReport(report);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<ReportResponseDto> createReport(@RequestBody ReportRequestDto reportRequest) {
+        return ResponseEntity.ok(ApiMapper.toReportResponse(reportService.createReport(ApiMapper.toReport(reportRequest))));
     }
 
     //PATCH /report/{reportId}/status
     @PatchMapping("/{reportId}/status")
-    public ResponseEntity<Report> updateReportStatus(@PathVariable UUID reportId, @RequestBody String status) {
-        return ResponseEntity.ok(reportService.updateReportStatus(reportId,status));
+    public ResponseEntity<ReportResponseDto> updateReportStatus(@PathVariable UUID reportId, @RequestBody ReportStatusUpdateDto request) {
+        return ResponseEntity.ok(ApiMapper.toReportResponse(reportService.updateReportStatus(reportId, request.status())));
     }
 
 

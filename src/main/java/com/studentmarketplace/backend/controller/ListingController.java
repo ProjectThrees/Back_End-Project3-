@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.controller;
 
-import com.studentmarketplace.backend.model.Listing;
+import com.studentmarketplace.backend.dto.ApiMapper;
+import com.studentmarketplace.backend.dto.ListingRequestDto;
+import com.studentmarketplace.backend.dto.ListingResponseDto;
 import com.studentmarketplace.backend.service.ListingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,39 +23,38 @@ public class ListingController {
 
     // GET /listing
     @GetMapping
-    public ResponseEntity<List<Listing>> getAllListings() {
-        return ResponseEntity.ok(listingService.getAllListings());
+    public ResponseEntity<List<ListingResponseDto>> getAllListings() {
+        return ResponseEntity.ok(listingService.getAllListings().stream().map(ApiMapper::toListingResponse).toList());
     }
 
     // GET /listing/{listingId}
     @GetMapping("/{listingId}")
-    public ResponseEntity<Optional<Listing>> getListing(@PathVariable UUID listingId) {
-        return ResponseEntity.ok(listingService.getListingById(listingId));
+    public ResponseEntity<Optional<ListingResponseDto>> getListing(@PathVariable UUID listingId) {
+        return ResponseEntity.ok(listingService.getListingById(listingId).map(ApiMapper::toListingResponse));
     }
 
     // GET /users/{userId}/listings
     @GetMapping("/user/{userId}/listings")
-    public ResponseEntity<List<Listing>> getListingsByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(listingService.getListingsByUser(userId));
+    public ResponseEntity<List<ListingResponseDto>> getListingsByUser(@PathVariable UUID userId) {
+        return ResponseEntity.ok(listingService.getListingsByUser(userId).stream().map(ApiMapper::toListingResponse).toList());
     }
 
     // POST /listing  - For creating new listing
     @PostMapping
-    public ResponseEntity<Listing> createListing(@RequestBody Listing listing) {
-        Listing created = listingService.createListing(listing);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<ListingResponseDto> createListing(@RequestBody ListingRequestDto listingRequest) {
+        return ResponseEntity.ok(ApiMapper.toListingResponse(listingService.createListing(ApiMapper.toListing(listingRequest))));
     }
 
     // PUT /listing/{listingId}
     @PutMapping("/{listingId}")
-    public ResponseEntity<Listing> updateListing(@PathVariable UUID listingId, @RequestBody Listing listing) {
-        return ResponseEntity.ok(listingService.updateListing(listingId, listing));
+    public ResponseEntity<ListingResponseDto> updateListing(@PathVariable UUID listingId, @RequestBody ListingRequestDto listingRequest) {
+        return ResponseEntity.ok(ApiMapper.toListingResponse(listingService.updateListing(listingId, ApiMapper.toListing(listingRequest))));
     }
 
     // PUT /listing/{listingId}/sold
     @PatchMapping("/{listingId}/sold")
-    public ResponseEntity<Listing> markAsSold(@PathVariable UUID listingId) {
-        return ResponseEntity.ok(listingService.markAsSold(listingId));
+    public ResponseEntity<ListingResponseDto> markAsSold(@PathVariable UUID listingId) {
+        return ResponseEntity.ok(ApiMapper.toListingResponse(listingService.markAsSold(listingId)));
     }
 
     // DELETE /listing/{listingId}
