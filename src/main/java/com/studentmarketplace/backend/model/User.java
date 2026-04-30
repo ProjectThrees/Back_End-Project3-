@@ -34,6 +34,9 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    private String provider;
+    private String providerID;
+
     public UUID getUserId() { return userId; }
     public void setUserId(UUID userId) { this.userId = userId; }
 
@@ -51,4 +54,11 @@ public class User {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getProvider() { return provider; }
+    public void setProvider(String provider) { this.provider = provider; }
+
+    public String getProviderID() { return providerID; }
+    public void setProviderID(String providerID) { this.providerID = providerID; }
+
 }
