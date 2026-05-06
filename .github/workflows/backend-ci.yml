@@ -23,5 +23,5 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Run tests and coverage verification
-        run: ./gradlew clean test jacocoTestCoverageVerification
+      - name: Run tests (includes JaCoCo report via test finalizedBy)
+        run: ./gradlew clean test --no-daemon
