@@ -11,6 +11,7 @@ import com.studentmarketplace.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -70,8 +71,9 @@ public class MessageService {
 
         List<Message> sent = messageRepository.findBySenderAndReceiver(user1, user2);
         List<Message> received = messageRepository.findBySenderAndReceiver(user2, user1);
-        sent.addAll(received);
-        return sent;
+        List<Message> conversation = new ArrayList<>(sent);
+        conversation.addAll(received);
+        return conversation;
     }
 
     public Message sendMessage(Message message) {
