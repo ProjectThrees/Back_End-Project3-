@@ -1,5 +1,7 @@
 package com.studentmarketplace.backend.service;
 
+import com.studentmarketplace.backend.exception.BadRequestException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.User;
 import com.studentmarketplace.backend.repository.ListingRepository;
@@ -8,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,10 +53,10 @@ public class ListingService {
 
     public Listing createListing(Listing listing) {
         if (listing.getUser() == null || listing.getUser().getUserId() == null) {
-            throw new IllegalArgumentException("Listing must be associated with a valid user.");
+            throw new BadRequestException("Listing must be associated with a valid user.");
         }
         User user = userRepository.findById(listing.getUser().getUserId())
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + listing.getUser().getUserId()));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + listing.getUser().getUserId()));
         listing.setUser(user);
         listing.setCreatedAt(LocalDateTime.now());
         if (listing.getIsSold() == null) listing.setIsSold(false);
@@ -64,7 +65,7 @@ public class ListingService {
 
     public Listing updateListing(UUID id, Listing updatedListing) {
         Listing existing = listingRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + id));
 
         existing.setTitle(updatedListing.getTitle());
         existing.setDescription(updatedListing.getDescription());
@@ -78,14 +79,14 @@ public class ListingService {
 
     public Listing markAsSold(UUID id) {
         Listing listing = listingRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + id));
         listing.setIsSold(true);
         return listingRepository.save(listing);
     }
 
     public void deleteListing(UUID id) {
         if (!listingRepository.existsById(id)) {
-            throw new NoSuchElementException("Listing not found with id: " + id);
+            throw new NotFoundException("Listing not found with id: " + id);
         }
         listingRepository.deleteById(id);
     }

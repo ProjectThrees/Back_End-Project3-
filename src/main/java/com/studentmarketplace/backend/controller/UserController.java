@@ -4,12 +4,12 @@ import com.studentmarketplace.backend.dto.ApiMapper;
 import com.studentmarketplace.backend.dto.UserCreateRequestDto;
 import com.studentmarketplace.backend.dto.UserResponseDto;
 import com.studentmarketplace.backend.dto.UserUpdateRequestDto;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -30,8 +30,12 @@ public class UserController {
 
     // GET /users/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<UserResponseDto>> getUserById(@PathVariable UUID id){
-        return ResponseEntity.ok(userService.getUserById(id).map(ApiMapper::toUserResponse));
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id){
+        return ResponseEntity.ok(
+                userService.getUserById(id)
+                        .map(ApiMapper::toUserResponse)
+                        .orElseThrow(() -> new NotFoundException("User not found with id: " + id))
+        );
     }
 
     @PostMapping

@@ -1,12 +1,13 @@
 package com.studentmarketplace.backend.service;
 
+import com.studentmarketplace.backend.exception.ConflictException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.User;
 import com.studentmarketplace.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class UserService {
 
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("A user with email " + user.getEmail() + " already exists.");
+            throw new ConflictException("A user with email " + user.getEmail() + " already exists.");
         }
         user.setCreatedAt(LocalDateTime.now());
         if (user.getRole() == null) user.setRole("USER");
@@ -50,7 +51,7 @@ public class UserService {
 
     public User updateUser(UUID id, User updatedUser) {
         User existing = userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
 
         existing.setName(updatedUser.getName());
         existing.setEmail(updatedUser.getEmail());
@@ -61,7 +62,7 @@ public class UserService {
 
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
-            throw new NoSuchElementException("User not found with id: " + id);
+            throw new NotFoundException("User not found with id: " + id);
         }
         userRepository.deleteById(id);
     }

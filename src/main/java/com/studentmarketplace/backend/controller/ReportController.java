@@ -4,12 +4,12 @@ import com.studentmarketplace.backend.dto.ApiMapper;
 import com.studentmarketplace.backend.dto.ReportRequestDto;
 import com.studentmarketplace.backend.dto.ReportResponseDto;
 import com.studentmarketplace.backend.dto.ReportStatusUpdateDto;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.service.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -29,8 +29,12 @@ public class ReportController {
 
     //GET /report/{reportId}
     @GetMapping("/{reportId}")
-    public ResponseEntity<Optional<ReportResponseDto>> getReportById(@PathVariable UUID reportId) {
-        return ResponseEntity.ok(reportService.getReportById(reportId).map(ApiMapper::toReportResponse));
+    public ResponseEntity<ReportResponseDto> getReportById(@PathVariable UUID reportId) {
+        return ResponseEntity.ok(
+                reportService.getReportById(reportId)
+                        .map(ApiMapper::toReportResponse)
+                        .orElseThrow(() -> new NotFoundException("Report not found with id: " + reportId))
+        );
     }
 
     //POST /report

@@ -3,12 +3,12 @@ package com.studentmarketplace.backend.controller;
 import com.studentmarketplace.backend.dto.ApiMapper;
 import com.studentmarketplace.backend.dto.ListingRequestDto;
 import com.studentmarketplace.backend.dto.ListingResponseDto;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.service.ListingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -29,8 +29,12 @@ public class ListingController {
 
     // GET /listing/{listingId}
     @GetMapping("/{listingId}")
-    public ResponseEntity<Optional<ListingResponseDto>> getListing(@PathVariable UUID listingId) {
-        return ResponseEntity.ok(listingService.getListingById(listingId).map(ApiMapper::toListingResponse));
+    public ResponseEntity<ListingResponseDto> getListing(@PathVariable UUID listingId) {
+        return ResponseEntity.ok(
+                listingService.getListingById(listingId)
+                        .map(ApiMapper::toListingResponse)
+                        .orElseThrow(() -> new NotFoundException("Listing not found with id: " + listingId))
+        );
     }
 
     // GET /users/{userId}/listings
