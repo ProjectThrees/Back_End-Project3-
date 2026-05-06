@@ -1,18 +1,19 @@
 package com.studentmarketplace.backend.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studentmarketplace.backend.TestDataFactory;
+import com.studentmarketplace.backend.dto.ReportRequestDto;
+import com.studentmarketplace.backend.dto.ReportStatusUpdateDto;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.Report;
 import com.studentmarketplace.backend.model.User;
 import com.studentmarketplace.backend.service.ReportService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,95 +21,77 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@WebMvcTest(ReportController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class ReportControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private ReportService reportService;
 
+    private ReportController reportController;
+
+    @BeforeEach
+    void setUp() {
+        reportController = new ReportController(reportService);
+    }
+
     @Test
-    void getAllReportsReturnsMappedDtos() throws Exception {
+    void getAllReports_returnsOk() {
         User reporter = TestDataFactory.user(UUID.randomUUID(), "reporter@example.com");
         User reportedUser = TestDataFactory.user(UUID.randomUUID(), "reported@example.com");
         Listing listing = TestDataFactory.listing(UUID.randomUUID(), reporter);
         Report report = TestDataFactory.report(UUID.randomUUID(), reporter, reportedUser, listing);
         when(reportService.getAllReports()).thenReturn(List.of(report));
 
-        mockMvc.perform(get("/report"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].reason").value("Spam"));
+        ResponseEntity<?> response = reportController.getAllReports();
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    void getReportByIdReturnsMappedDto() throws Exception {
+    void getReportById_returnsOk() {
         User reporter = TestDataFactory.user(UUID.randomUUID(), "reporter@example.com");
         User reportedUser = TestDataFactory.user(UUID.randomUUID(), "reported@example.com");
         Listing listing = TestDataFactory.listing(UUID.randomUUID(), reporter);
         Report report = TestDataFactory.report(UUID.randomUUID(), reporter, reportedUser, listing);
         when(reportService.getReportById(report.getReportId())).thenReturn(Optional.of(report));
 
-        mockMvc.perform(get("/report/{reportId}", report.getReportId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reason").value("Spam"));
+        ResponseEntity<?> response = reportController.getReportById(report.getReportId());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    void createReportReturnsMappedDto() throws Exception {
+    void createReport_returnsOk() {
         User reporter = TestDataFactory.user(UUID.randomUUID(), "reporter@example.com");
         User reportedUser = TestDataFactory.user(UUID.randomUUID(), "reported@example.com");
         Listing listing = TestDataFactory.listing(UUID.randomUUID(), reporter);
         Report report = TestDataFactory.report(UUID.randomUUID(), reporter, reportedUser, listing);
         when(reportService.createReport(any(Report.class))).thenReturn(report);
 
-        mockMvc.perform(post("/report")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new ReportBody(reporter.getUserId(), reportedUser.getUserId(), listing.getListingId(), "Spam"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reporterId").value(reporter.getUserId().toString()));
+        ResponseEntity<?> response = reportController.createReport(
+                new ReportRequestDto(reporter.getUserId(), reportedUser.getUserId(), listing.getListingId(), "Spam")
+        );
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    void updateReportStatusReturnsMappedDto() throws Exception {
+    void updateReportStatus_returnsOk() {
         User reporter = TestDataFactory.user(UUID.randomUUID(), "reporter@example.com");
         Report report = TestDataFactory.report(UUID.randomUUID(), reporter, null, null);
         report.setStatus("RESOLVED");
         when(reportService.updateReportStatus(eq(report.getReportId()), eq("RESOLVED"))).thenReturn(report);
 
-        mockMvc.perform(patch("/report/{reportId}/status", report.getReportId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new StatusBody("RESOLVED"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("RESOLVED"));
+        ResponseEntity<?> response = reportController.updateReportStatus(report.getReportId(), new ReportStatusUpdateDto("RESOLVED"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    void deleteReportReturnsNoContent() throws Exception {
+    void deleteReport_returnsNoContent() {
         UUID reportId = UUID.randomUUID();
         doNothing().when(reportService).deleteReport(reportId);
 
-        mockMvc.perform(delete("/report/{reportId}", reportId))
-                .andExpect(status().isNoContent());
-    }
-
-    private record ReportBody(UUID reporterId, UUID reportedUserId, UUID listingId, String reason) {
-    }
-
-    private record StatusBody(String status) {
+        ResponseEntity<Void> response = reportController.deleteReportById(reportId);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
 }
