@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.service;
 
 import com.studentmarketplace.backend.TestDataFactory;
+import com.studentmarketplace.backend.exception.BadRequestException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.Message;
 import com.studentmarketplace.backend.model.User;
@@ -15,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,7 +63,7 @@ class MessageServiceTest {
         invalid.setSender(sender);
         invalid.setReceiver(sender);
 
-        assertThrows(IllegalArgumentException.class, () -> messageService.sendMessage(invalid));
+        assertThrows(BadRequestException.class, () -> messageService.sendMessage(invalid));
     }
 
     @Test
@@ -99,6 +100,6 @@ class MessageServiceTest {
         UUID messageId = UUID.randomUUID();
         when(messageRepository.existsById(messageId)).thenReturn(false);
 
-        assertThrows(NoSuchElementException.class, () -> messageService.deleteMessage(messageId));
+        assertThrows(NotFoundException.class, () -> messageService.deleteMessage(messageId));
     }
 }

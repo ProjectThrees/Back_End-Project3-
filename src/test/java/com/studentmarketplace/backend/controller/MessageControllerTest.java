@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +51,19 @@ class MessageControllerTest {
         mockMvc.perform(get("/messages"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].content").value("Is this still available?"));
+    }
+
+    @Test
+    void getMessageReturnsMappedDto() throws Exception {
+        User sender = TestDataFactory.user(UUID.randomUUID(), "sender@example.com");
+        User receiver = TestDataFactory.user(UUID.randomUUID(), "receiver@example.com");
+        Listing listing = TestDataFactory.listing(UUID.randomUUID(), sender);
+        Message message = TestDataFactory.message(UUID.randomUUID(), sender, receiver, listing);
+        when(messageService.getMessageById(message.getMessageId())).thenReturn(Optional.of(message));
+
+        mockMvc.perform(get("/messages/{messageId}", message.getMessageId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Is this still available?"));
     }
 
     @Test

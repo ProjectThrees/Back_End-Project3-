@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -51,6 +52,17 @@ class ListingControllerTest {
         mockMvc.perform(get("/listings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Laptop"));
+    }
+
+    @Test
+    void getListingReturnsMappedDto() throws Exception {
+        User user = TestDataFactory.user(UUID.randomUUID(), "seller@example.com");
+        Listing listing = TestDataFactory.listing(UUID.randomUUID(), user);
+        when(listingService.getListingById(listing.getListingId())).thenReturn(Optional.of(listing));
+
+        mockMvc.perform(get("/listings/{listingId}", listing.getListingId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Laptop"));
     }
 
     @Test

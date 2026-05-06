@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +53,19 @@ class ReportControllerTest {
         mockMvc.perform(get("/report"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].reason").value("Spam"));
+    }
+
+    @Test
+    void getReportByIdReturnsMappedDto() throws Exception {
+        User reporter = TestDataFactory.user(UUID.randomUUID(), "reporter@example.com");
+        User reportedUser = TestDataFactory.user(UUID.randomUUID(), "reported@example.com");
+        Listing listing = TestDataFactory.listing(UUID.randomUUID(), reporter);
+        Report report = TestDataFactory.report(UUID.randomUUID(), reporter, reportedUser, listing);
+        when(reportService.getReportById(report.getReportId())).thenReturn(Optional.of(report));
+
+        mockMvc.perform(get("/report/{reportId}", report.getReportId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reason").value("Spam"));
     }
 
     @Test

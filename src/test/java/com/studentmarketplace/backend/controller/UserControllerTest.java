@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -47,6 +48,17 @@ class UserControllerTest {
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].email").value("user@example.com"));
+    }
+
+    @Test
+    void getUserByIdReturnsMappedDto() throws Exception {
+        UUID userId = UUID.randomUUID();
+        User user = TestDataFactory.user(userId, "lookup@example.com");
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+
+        mockMvc.perform(get("/users/{id}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("lookup@example.com"));
     }
 
     @Test
