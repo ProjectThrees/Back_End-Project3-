@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.service;
 
 import com.studentmarketplace.backend.TestDataFactory;
+import com.studentmarketplace.backend.exception.ConflictException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.User;
 import com.studentmarketplace.backend.repository.FavoriteRepository;
@@ -13,7 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,7 +55,7 @@ class FavoriteServiceTest {
         when(listingRepository.findById(listingId)).thenReturn(Optional.of(listing));
         when(favoriteRepository.existsByUserAndListing(user, listing)).thenReturn(true);
 
-        assertThrows(IllegalStateException.class, () -> favoriteService.addFavorite(userId, listingId));
+        assertThrows(ConflictException.class, () -> favoriteService.addFavorite(userId, listingId));
     }
 
     @Test
@@ -88,6 +89,6 @@ class FavoriteServiceTest {
         when(listingRepository.findById(listingId)).thenReturn(Optional.of(listing));
         when(favoriteRepository.existsByUserAndListing(user, listing)).thenReturn(false);
 
-        assertThrows(NoSuchElementException.class, () -> favoriteService.removeFavorite(userId, listingId));
+        assertThrows(NotFoundException.class, () -> favoriteService.removeFavorite(userId, listingId));
     }
 }

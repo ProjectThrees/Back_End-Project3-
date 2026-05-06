@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.service;
 
 import com.studentmarketplace.backend.TestDataFactory;
+import com.studentmarketplace.backend.exception.BadRequestException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.Report;
 import com.studentmarketplace.backend.model.User;
@@ -14,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,7 +60,7 @@ class ReportServiceTest {
     void createReportRequiresReporter() {
         Report invalid = new Report();
 
-        assertThrows(IllegalArgumentException.class, () -> reportService.createReport(invalid));
+        assertThrows(BadRequestException.class, () -> reportService.createReport(invalid));
     }
 
     @Test
@@ -78,7 +79,7 @@ class ReportServiceTest {
 
     @Test
     void updateReportStatusRejectsInvalidStatus() {
-        assertThrows(IllegalArgumentException.class, () -> reportService.updateReportStatus(UUID.randomUUID(), "INVALID"));
+        assertThrows(BadRequestException.class, () -> reportService.updateReportStatus(UUID.randomUUID(), "INVALID"));
     }
 
     @Test
@@ -97,6 +98,6 @@ class ReportServiceTest {
         UUID reportId = UUID.randomUUID();
         when(reportRepository.existsById(reportId)).thenReturn(false);
 
-        assertThrows(NoSuchElementException.class, () -> reportService.deleteReport(reportId));
+        assertThrows(NotFoundException.class, () -> reportService.deleteReport(reportId));
     }
 }

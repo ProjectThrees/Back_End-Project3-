@@ -3,12 +3,12 @@ package com.studentmarketplace.backend.controller;
 import com.studentmarketplace.backend.dto.ApiMapper;
 import com.studentmarketplace.backend.dto.MessageRequestDto;
 import com.studentmarketplace.backend.dto.MessageResponseDto;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.service.MessageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -28,8 +28,12 @@ public class MessageController {
 
     //GET /messages/{messageId}
     @GetMapping("/{messageId}")
-    public ResponseEntity<Optional<MessageResponseDto>> getMessage(@PathVariable UUID messageId){
-        return ResponseEntity.ok(messageService.getMessageById(messageId).map(ApiMapper::toMessageResponse));
+    public ResponseEntity<MessageResponseDto> getMessage(@PathVariable UUID messageId){
+        return ResponseEntity.ok(
+                messageService.getMessageById(messageId)
+                        .map(ApiMapper::toMessageResponse)
+                        .orElseThrow(() -> new NotFoundException("Message not found with id: " + messageId))
+        );
     }
 
     //POST /messages

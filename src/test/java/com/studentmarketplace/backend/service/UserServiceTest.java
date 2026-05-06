@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.service;
 
 import com.studentmarketplace.backend.TestDataFactory;
+import com.studentmarketplace.backend.exception.ConflictException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.User;
 import com.studentmarketplace.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,7 +57,7 @@ class UserServiceTest {
     void createUserRejectsDuplicateEmail() {
         when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        assertThrows(ConflictException.class, () -> userService.createUser(user));
         verify(userRepository, never()).save(any());
     }
 
@@ -83,7 +84,7 @@ class UserServiceTest {
     void updateUserThrowsWhenMissing() {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class, () -> userService.updateUser(userId, user));
+        assertThrows(NotFoundException.class, () -> userService.updateUser(userId, user));
     }
 
     @Test
@@ -99,7 +100,7 @@ class UserServiceTest {
     void deleteUserThrowsWhenMissing() {
         when(userRepository.existsById(userId)).thenReturn(false);
 
-        assertThrows(NoSuchElementException.class, () -> userService.deleteUser(userId));
+        assertThrows(NotFoundException.class, () -> userService.deleteUser(userId));
         verify(userRepository, never()).deleteById(any());
     }
 }

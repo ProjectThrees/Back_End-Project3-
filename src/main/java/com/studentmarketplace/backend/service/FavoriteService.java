@@ -1,5 +1,7 @@
 package com.studentmarketplace.backend.service;
 
+import com.studentmarketplace.backend.exception.ConflictException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Favorite;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.User;
@@ -11,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,13 +44,13 @@ public class FavoriteService {
 
     public List<Favorite> getFavoritesByUser(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         return favoriteRepository.findByUser(user);
     }
 
     public List<Favorite> getFavoritesByListing(UUID listingId) {
         Listing listing = listingRepository.findById(listingId)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + listingId));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + listingId));
         return favoriteRepository.findByListing(listing);
     }
 
@@ -59,20 +60,20 @@ public class FavoriteService {
 
     public boolean isFavorited(UUID userId, UUID listingId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Listing listing = listingRepository.findById(listingId)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + listingId));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + listingId));
         return favoriteRepository.existsByUserAndListing(user, listing);
     }
 
     public Favorite addFavorite(UUID userId, UUID listingId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Listing listing = listingRepository.findById(listingId)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + listingId));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + listingId));
 
         if (favoriteRepository.existsByUserAndListing(user, listing)) {
-            throw new IllegalStateException("This listing is already in the user's favorites.");
+            throw new ConflictException("This listing is already in the user's favorites.");
         }
 
         Favorite favorite = new Favorite();
@@ -85,12 +86,12 @@ public class FavoriteService {
     @Transactional
     public void removeFavorite(UUID userId, UUID listingId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Listing listing = listingRepository.findById(listingId)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + listingId));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + listingId));
 
         if (!favoriteRepository.existsByUserAndListing(user, listing)) {
-            throw new NoSuchElementException("Favorite not found for this user and listing.");
+            throw new NotFoundException("Favorite not found for this user and listing.");
         }
         favoriteRepository.deleteByUserAndListing(user, listing);
     }

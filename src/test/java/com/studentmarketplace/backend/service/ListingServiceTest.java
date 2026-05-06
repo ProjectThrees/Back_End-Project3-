@@ -1,6 +1,8 @@
 package com.studentmarketplace.backend.service;
 
 import com.studentmarketplace.backend.TestDataFactory;
+import com.studentmarketplace.backend.exception.BadRequestException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.User;
 import com.studentmarketplace.backend.repository.ListingRepository;
@@ -12,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,7 +49,7 @@ class ListingServiceTest {
     void createListingRejectsMissingUser() {
         Listing invalidListing = new Listing();
 
-        assertThrows(IllegalArgumentException.class, () -> listingService.createListing(invalidListing));
+        assertThrows(BadRequestException.class, () -> listingService.createListing(invalidListing));
         verify(listingRepository, never()).save(any());
     }
 
@@ -103,6 +104,6 @@ class ListingServiceTest {
     void deleteListingThrowsWhenMissing() {
         when(listingRepository.existsById(listingId)).thenReturn(false);
 
-        assertThrows(NoSuchElementException.class, () -> listingService.deleteListing(listingId));
+        assertThrows(NotFoundException.class, () -> listingService.deleteListing(listingId));
     }
 }

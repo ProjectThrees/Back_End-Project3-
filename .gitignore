@@ -18,6 +18,9 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
+.env*
+!.env.example
+.env
 .idea
 *.iws
 *.iml

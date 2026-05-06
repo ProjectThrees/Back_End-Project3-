@@ -1,5 +1,7 @@
 package com.studentmarketplace.backend.service;
 
+import com.studentmarketplace.backend.exception.BadRequestException;
+import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.model.Listing;
 import com.studentmarketplace.backend.model.Report;
 import com.studentmarketplace.backend.model.User;
@@ -10,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -54,40 +55,40 @@ public class ReportService {
 
     public List<Report> getReportsByReporter(UUID reporterId) {
         User reporter = userRepository.findById(reporterId)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + reporterId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + reporterId));
         return reportRepository.findByReporter(reporter);
     }
 
     public List<Report> getReportsByReportedUser(UUID reportedUserId) {
         User reportedUser = userRepository.findById(reportedUserId)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + reportedUserId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + reportedUserId));
         return reportRepository.findByReportedUser(reportedUser);
     }
 
     public List<Report> getReportsByListing(UUID listingId) {
         Listing listing = listingRepository.findById(listingId)
-                .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + listingId));
+                .orElseThrow(() -> new NotFoundException("Listing not found with id: " + listingId));
         return reportRepository.findByListing(listing);
     }
 
     public Report createReport(Report report) {
         if (report.getReporter() == null || report.getReporter().getUserId() == null) {
-            throw new IllegalArgumentException("Report must have a valid reporter.");
+            throw new BadRequestException("Report must have a valid reporter.");
         }
 
         User reporter = userRepository.findById(report.getReporter().getUserId())
-                .orElseThrow(() -> new NoSuchElementException("Reporter not found with id: " + report.getReporter().getUserId()));
+                .orElseThrow(() -> new NotFoundException("Reporter not found with id: " + report.getReporter().getUserId()));
         report.setReporter(reporter);
 
         if (report.getReportedUser() != null && report.getReportedUser().getUserId() != null) {
             User reportedUser = userRepository.findById(report.getReportedUser().getUserId())
-                    .orElseThrow(() -> new NoSuchElementException("Reported user not found with id: " + report.getReportedUser().getUserId()));
+                    .orElseThrow(() -> new NotFoundException("Reported user not found with id: " + report.getReportedUser().getUserId()));
             report.setReportedUser(reportedUser);
         }
 
         if (report.getListing() != null && report.getListing().getListingId() != null) {
             Listing listing = listingRepository.findById(report.getListing().getListingId())
-                    .orElseThrow(() -> new NoSuchElementException("Listing not found with id: " + report.getListing().getListingId()));
+                    .orElseThrow(() -> new NotFoundException("Listing not found with id: " + report.getListing().getListingId()));
             report.setListing(listing);
         }
 
@@ -99,21 +100,21 @@ public class ReportService {
     public Report updateReportStatus(UUID id, String status) {
         validateStatus(status);
         Report report = reportRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Report not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Report not found with id: " + id));
         report.setStatus(status);
         return reportRepository.save(report);
     }
 
     public void deleteReport(UUID id) {
         if (!reportRepository.existsById(id)) {
-            throw new NoSuchElementException("Report not found with id: " + id);
+            throw new NotFoundException("Report not found with id: " + id);
         }
         reportRepository.deleteById(id);
     }
 
     private void validateStatus(String status) {
         if (!VALID_STATUSES.contains(status)) {
-            throw new IllegalArgumentException("Invalid status: " + status + ". Must be one of: PENDING, REVIEWED, RESOLVED.");
+            throw new BadRequestException("Invalid status: " + status + ". Must be one of: PENDING, REVIEWED, RESOLVED.");
         }
     }
 }
