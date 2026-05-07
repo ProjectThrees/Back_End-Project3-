@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: project3-backend
+    runtime: java
+    buildCommand: ./gradlew bootJar
+    startCommand: java -jar build/libs/*.jar
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
