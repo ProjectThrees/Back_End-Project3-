@@ -8,8 +8,10 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -38,9 +40,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public browse endpoints
                         .requestMatchers(HttpMethod.GET, "/listings", "/listings/*").permitAll()
+                        // Individual user profile is public; listing all users or modifying users is admin-only
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users", "/users/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/users/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/users/*").hasRole("ADMIN")
+                        // Report management is admin-only; submitting a report is for any authenticated user
+                        .requestMatchers(HttpMethod.GET, "/report", "/report/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/report/*/status").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/report/*").hasRole("ADMIN")
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated()
@@ -48,9 +59,20 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler))
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults()));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            String role = jwt.getClaimAsString("role");
+            if (role == null || role.isBlank()) return List.of();
+            return List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+        });
+        return converter;
     }
 
     @Bean
