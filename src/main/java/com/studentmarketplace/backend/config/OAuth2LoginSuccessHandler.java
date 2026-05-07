@@ -45,7 +45,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
             String provider = token.getAuthorizedClientRegistrationId();
             OAuth2User oAuthUser = token.getPrincipal();
-            boolean webAuthFlow = hasWebAuthCookie(request);
+            boolean webAuthFlow = isWebAuthFlow(request);
 
             User user = oAuthUserService.proccessOAuthUser(provider, oAuthUser);
             String appJwt = jwtService.generateToken(user);
@@ -57,7 +57,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             response.sendRedirect(redirectUrL);
         } catch (Exception ex) {
             String errorMessage = URLEncoder.encode(ex.getMessage(), StandardCharsets.UTF_8);
-            boolean webAuthFlow = hasWebAuthCookie(request);
+            boolean webAuthFlow = isWebAuthFlow(request);
             String redirectUrl = webAuthFlow
                     ? buildWebRedirect("error", errorMessage)
                     : "myapp://oauth-error?message=" + errorMessage;
@@ -66,18 +66,15 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         }
     }
 
-    private boolean hasWebAuthCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return false;
-        }
-        for (Cookie cookie : cookies) {
-            if ("oauth_mode".equals(cookie.getName()) && "web".equals(cookie.getValue())) {
-                return true;
-            }
-        }
-        return false;
+    private boolean isWebAuthFlow(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        String origin = request.getHeader("Origin");
+        return (referer != null && referer.contains("front-end-project3.onrender.com"))
+                || (origin != null && origin.contains("front-end-project3.onrender.com"))
+                || (referer != null && referer.contains("localhost"))
+                || (origin != null && origin.contains("localhost"));
     }
+
 
     private void clearWebAuthCookie(HttpServletResponse response) {
         Cookie cookie = new Cookie("oauth_mode", "");
