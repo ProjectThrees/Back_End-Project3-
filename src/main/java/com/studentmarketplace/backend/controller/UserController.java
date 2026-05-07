@@ -7,6 +7,8 @@ import com.studentmarketplace.backend.dto.UserUpdateRequestDto;
 import com.studentmarketplace.backend.exception.NotFoundException;
 import com.studentmarketplace.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,13 +45,16 @@ public class UserController {
         return ResponseEntity.ok(ApiMapper.toUserResponse(userService.createUser(ApiMapper.toUser(userRequest))));
     }
 
-    // GET /users/me (Implement this when we can get current user)
-    /*
+    // GET /users/me — returns the currently authenticated user's profile
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser(){
-        return ResponseEntity.ok(userService.getCurrentUser());
+    public ResponseEntity<UserResponseDto> getMe(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(
+                userService.getUserById(userId)
+                        .map(ApiMapper::toUserResponse)
+                        .orElseThrow(() -> new NotFoundException("User not found with id: " + userId))
+        );
     }
-     */
 
     // PUT /users/{id}
     @PutMapping("/{id}")
